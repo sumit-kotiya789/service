@@ -5,7 +5,7 @@ Source of truth for scope: [PHASES.md](PHASES.md). This file tracks status + pha
 | Phase | Name                         | Status      |
 | ----- | ---------------------------- | ----------- |
 | 0     | Foundation                   | complete    |
-| 1     | WhatsApp Core (no real Meta) | not started |
+| 1     | WhatsApp Core (no real Meta) | in progress |
 | 2     | Real WhatsApp Integration    | not started |
 | 3     | Agent Inbox UI               | not started |
 | 4     | Campaigns & Broadcast        | not started |
@@ -21,6 +21,11 @@ Source of truth for scope: [PHASES.md](PHASES.md). This file tracks status + pha
 - 2026-09-25 — Package manager: pnpm. Module system: ESM (`"type": "module"`, NodeNext). Tests: vitest. `.env` loaded via Node's built-in `--env-file`, no dotenv.
 - 2026-09-25 — TypeScript pinned to 6.x: typescript-eslint 8.70 refuses TS 7.0. Revisit when typescript-eslint supports TS 7.
 - 2026-09-25 — Compose postgres host port is `POSTGRES_PORT` (default 5432). On the dev machine 5432 = native Postgres, 5433 = VS Code, so local `.env` uses 5434.
+- 2026-09-25 — ORM: Prisma (user choice). Pinned 7.10.0: npm `latest` tag points at 8.0.0-rc.17, not taking an RC.
+- 2026-09-25 — No separate `agents` table: agents are `users` with `role=agent` (ARCHITECTURE.md data model defines users as "dashboard/agent logins"). PHASES.md lists `agents` separately; flagged to user.
+- 2026-09-25 — Message status adds `received` (inbound) and `queued` (outbound, pre-send) to ARCHITECTURE's sent/delivered/read/failed.
+- 2026-09-25 — Meta webhook body is not strict-validated at the gateway (HMAC-authenticated; Meta adds fields). Worker parses known fields leniently. Every API route is strict.
+- 2026-09-25 — Integration tests use `prisma migrate deploy` + unique data per run, not `migrate reset` (Prisma blocks AI-run resets; non-destructive is better anyway).
 
 ## Phase summaries
 

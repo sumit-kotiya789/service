@@ -13,10 +13,10 @@ Rule: finish a phase fully (working, tested locally) before starting next. No sk
 
 ## Phase 1 — WhatsApp Core (no real Meta yet)
 
-- [ ] DB schema: users, agents, contacts, conversations, messages, templates
-- [ ] Auth: JWT login for agents
-- [ ] Webhook receiver, stubbed WhatsApp sender (console log only)
-- [ ] Redis + BullMQ queue for outbound sends
+- [x] DB schema: users, agents, contacts, conversations, messages, templates
+- [x] Auth: JWT login for agents
+- [x] Webhook receiver, stubbed WhatsApp sender (console log only)
+- [x] Redis + BullMQ queue for outbound sends
 - [ ] Seed data, local smoke test
 
 ## Phase 2 — Real WhatsApp Integration
