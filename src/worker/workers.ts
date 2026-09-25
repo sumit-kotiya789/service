@@ -1,5 +1,6 @@
 import { UnrecoverableError, Worker } from 'bullmq';
 import { ZodError } from 'zod';
+import type { Redis } from 'ioredis';
 import type { PrismaClient } from '../db/client.js';
 import {
   INBOUND_QUEUE,
@@ -10,9 +11,7 @@ import {
 import { processInbound } from './inbound.js';
 import { processOutbound, type Sender } from './outbound.js';
 
-export function createWorkers(prisma: PrismaClient, redisUrl: string, send: Sender) {
-  const connection = { url: redisUrl };
-
+export function createWorkers(prisma: PrismaClient, connection: Redis, send: Sender) {
   const inbound = new Worker<InboundJob>(
     INBOUND_QUEUE,
     async (job) => {

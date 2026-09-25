@@ -19,8 +19,3 @@ export const JOB_OPTIONS: DefaultJobOptions = {
   removeOnComplete: 1000,
   removeOnFail: 5000,
 };
-
-/** Producers fail fast when Redis is down instead of buffering (webhook must ack or error in <5s). */
-export function producerConnection(redisUrl: string) {
-  return { url: redisUrl, enableOfflineQueue: false };
-}

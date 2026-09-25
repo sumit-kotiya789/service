@@ -1,16 +1,13 @@
 import { Queue } from 'bullmq';
 import { parseEnv } from '../config/env.js';
-import {
-  INBOUND_QUEUE,
-  JOB_OPTIONS,
-  producerConnection,
-  type InboundJob,
-} from '../shared-types/jobs.js';
+import { producerRedis } from '../config/redis.js';
+import { INBOUND_QUEUE, JOB_OPTIONS, type InboundJob } from '../shared-types/jobs.js';
 import { createGatewayApp } from './app.js';
 
 const env = parseEnv(process.env);
+const redis = producerRedis(env.REDIS_URL);
 const inboundQueue = new Queue<InboundJob>(INBOUND_QUEUE, {
-  connection: producerConnection(env.REDIS_URL),
+  connection: redis,
   defaultJobOptions: JOB_OPTIONS,
 });
 await inboundQueue.waitUntilReady();
@@ -26,7 +23,10 @@ const server = createGatewayApp({
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
     server.close(() => {
-      void inboundQueue.close().then(() => process.exit(0));
+      void inboundQueue
+        .close()
+        .then(() => redis.quit())
+        .then(() => process.exit(0));
     });
   });
 }
