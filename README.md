@@ -7,14 +7,40 @@ WhatsApp + Calls business communication platform. See [docs/](docs/) — `PHASES
 Requires Node 22+, pnpm 10, Docker.
 
 ```sh
-pnpm install
-cp .env.example .env        # then set JWT_SECRET (openssl rand -hex 32)
+pnpm install                # also generates the Prisma client
+cp .env.example .env        # set JWT_SECRET, WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN (openssl rand -hex 32)
 docker compose up -d --wait # postgres:5432, redis:6379 on 127.0.0.1
+pnpm db:migrate             # apply migrations
+pnpm build && pnpm db:seed  # seed runs from dist/
 ```
+
+Run each in its own terminal (all read `.env`):
+
+```sh
+pnpm start:api       # :PORT
+pnpm start:gateway   # :WEBHOOK_PORT, POST /webhooks/whatsapp
+pnpm start:worker    # inbound + outbound queues; fake WhatsApp sender logs to console
+pnpm smoke           # end-to-end check against the running stack
+```
+
+Seed login: `agent@connecthub.local` / `connecthub-dev-password` (dev only; seed refuses `NODE_ENV=production`).
 
 ## Scripts
 
-`pnpm typecheck` · `pnpm lint` · `pnpm format:check` · `pnpm test` · `pnpm build`
+`pnpm typecheck` · `pnpm lint` · `pnpm format:check` · `pnpm test` (unit) · `pnpm test:int` (needs docker; uses `connecthub_test` DB + Redis db 1) · `pnpm build`
+
+## API (Phase 1)
+
+| Method | Path                          | Auth   | Notes                                  |
+| ------ | ----------------------------- | ------ | -------------------------------------- |
+| POST   | `/auth/login`                 | —      | `{email, password}` → access + refresh |
+| POST   | `/auth/refresh`               | —      | rotates; replayed token revokes all    |
+| POST   | `/auth/logout`                | —      | revokes the refresh token              |
+| GET    | `/conversations?status=`      | Bearer | latest 100                             |
+| GET    | `/conversations/:id/messages` | Bearer | latest 100, oldest first               |
+| POST   | `/conversations/:id/messages` | Bearer | `{body}` → 202, sent by worker         |
+
+Gateway: `GET /webhooks/whatsapp` (Meta handshake), `POST /webhooks/whatsapp` (`X-Hub-Signature-256` required).
 
 ## Folder structure (locked)
 
