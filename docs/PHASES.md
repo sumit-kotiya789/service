@@ -6,10 +6,10 @@ Rule: finish a phase fully (working, tested locally) before starting next. No sk
 
 ## Phase 0 — Foundation
 
-- [ ] Repo init, TypeScript config, lint/prettier, Docker Compose (postgres, redis)
-- [ ] CI: run typecheck + lint on push
-- [ ] `.env.example`, secrets never committed
-- [ ] Base folder structure locked (see ARCHITECTURE.md)
+- [x] Repo init, TypeScript config, lint/prettier, Docker Compose (postgres, redis)
+- [x] CI: run typecheck + lint on push
+- [x] `.env.example`, secrets never committed
+- [x] Base folder structure locked (see ARCHITECTURE.md)
 
 ## Phase 1 — WhatsApp Core (no real Meta yet)
 
