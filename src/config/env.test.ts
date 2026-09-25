@@ -5,6 +5,8 @@ const valid = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/connecthub',
   REDIS_URL: 'redis://localhost:6379',
   JWT_SECRET: 'x'.repeat(32),
+  WHATSAPP_APP_SECRET: 'y'.repeat(16),
+  WHATSAPP_VERIFY_TOKEN: 'verify-me',
 };
 
 describe('parseEnv', () => {
