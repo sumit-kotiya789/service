@@ -2,18 +2,18 @@
 
 Source of truth for scope: [PHASES.md](PHASES.md). This file tracks status + phase summaries.
 
-| Phase | Name                          | Status      |
-| ----- | ----------------------------- | ----------- |
-| 0     | Foundation                    | in progress |
-| 1     | WhatsApp Core (no real Meta)  | not started |
-| 2     | Real WhatsApp Integration     | not started |
-| 3     | Agent Inbox UI                | not started |
-| 4     | Campaigns & Broadcast         | not started |
-| 5     | No-Code Chatbot Builder       | not started |
-| 6     | AI Layer                      | not started |
-| 7     | Call/IVR Suite (optional)     | not started |
-| 8     | CRM Integrations & Analytics  | not started |
-| 9     | Compliance & Hardening        | not started |
+| Phase | Name                         | Status      |
+| ----- | ---------------------------- | ----------- |
+| 0     | Foundation                   | in progress |
+| 1     | WhatsApp Core (no real Meta) | not started |
+| 2     | Real WhatsApp Integration    | not started |
+| 3     | Agent Inbox UI               | not started |
+| 4     | Campaigns & Broadcast        | not started |
+| 5     | No-Code Chatbot Builder      | not started |
+| 6     | AI Layer                     | not started |
+| 7     | Call/IVR Suite (optional)    | not started |
+| 8     | CRM Integrations & Analytics | not started |
+| 9     | Compliance & Hardening       | not started |
 
 ## Decisions log
 
