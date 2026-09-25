@@ -7,3 +7,4 @@ coverage/
 *.pem
 *.key
 *.log
+src/db/generated/

@@ -1,3 +1,5 @@
 pnpm-lock.yaml
 dist
 coverage
+src/db/generated
+src/db/migrations

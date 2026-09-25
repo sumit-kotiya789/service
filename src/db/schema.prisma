@@ -1,0 +1,170 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "./generated"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  admin
+  agent
+}
+
+enum ConversationStatus {
+  open
+  closed
+}
+
+enum Direction {
+  in
+  out
+}
+
+enum Channel {
+  whatsapp
+  call
+}
+
+enum MessageStatus {
+  received // inbound
+  queued // outbound, waiting in BullMQ
+  sent
+  delivered
+  read
+  failed
+}
+
+enum TemplateCategory {
+  marketing
+  utility
+  authentication
+}
+
+enum TemplateStatus {
+  pending
+  approved
+  rejected
+}
+
+// Dashboard/agent logins. Agents are users with role=agent (ARCHITECTURE.md data model).
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(agent)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  assignedConversations Conversation[]
+  sentMessages          Message[]
+  refreshTokens         RefreshToken[]
+  auditLogs             AuditLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") // sha256 of the opaque token; raw token never stored
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// End customers. WhatsApp identity = phone (wa_id: E.164 digits, no '+').
+model Contact {
+  id        String   @id @default(uuid()) @db.Uuid
+  phone     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  conversation Conversation?
+
+  @@map("contacts")
+}
+
+// One per contact.
+model Conversation {
+  id            String             @id @default(uuid()) @db.Uuid
+  contactId     String             @unique @map("contact_id") @db.Uuid
+  assignedToId  String?            @map("assigned_to_id") @db.Uuid
+  status        ConversationStatus @default(open)
+  lastMessageAt DateTime?          @map("last_message_at")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  contact    Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  assignedTo User?     @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  messages   Message[]
+
+  @@index([assignedToId, status])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+model Message {
+  id             String        @id @default(uuid()) @db.Uuid
+  conversationId String        @map("conversation_id") @db.Uuid
+  direction      Direction
+  channel        Channel       @default(whatsapp)
+  type           String        @default("text") // WhatsApp message type: text, image, template, ...
+  body           String?
+  status         MessageStatus
+  externalId     String?       @unique @map("external_id") // WhatsApp message id; dedupes webhook retries
+  sentById       String?       @map("sent_by_id") @db.Uuid
+  error          String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sentBy       User?        @relation(fields: [sentById], references: [id], onDelete: SetNull)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+// Meta-approved message templates. Submission/approval flow is Phase 2.
+model Template {
+  id         String           @id @default(uuid()) @db.Uuid
+  name       String
+  language   String           @default("en")
+  category   TemplateCategory
+  body       String
+  status     TemplateStatus   @default(pending)
+  externalId String?          @unique @map("external_id")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  @@unique([name, language])
+  @@map("templates")
+}
+
+// Who did what, when. Append-only.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}

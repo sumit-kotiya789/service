@@ -7,24 +7,44 @@
     "node": ">=22"
   },
   "scripts": {
+    "postinstall": "prisma generate",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run --exclude \"**/*.int.test.ts\"",
+    "test:int": "vitest run --config vitest.int.config.ts",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "start:api": "node --env-file-if-exists=.env dist/api/main.js",
+    "start:gateway": "node --env-file-if-exists=.env dist/webhook-gateway/main.js",
+    "start:worker": "node --env-file-if-exists=.env dist/worker/main.js",
+    "smoke": "node --env-file-if-exists=.env dist/smoke.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
     "@types/node": "22",
+    "@types/pg": "^8.23.1",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.9",
+    "prisma": "7.10.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
     "vitest": "^5.0.2"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "bullmq": "^6.3.8",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "jose": "^6.2.12",
+    "pg": "^8.23.0",
     "zod": "^4.6.5"
   },
   "packageManager": "pnpm@10.8.0"

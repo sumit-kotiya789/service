@@ -17,5 +17,5 @@
     "rootDir": ".",
     "sourceMap": true
   },
-  "include": ["src", "eslint.config.js"]
+  "include": ["src", "eslint.config.js", "prisma.config.ts", "vitest.int.config.ts"]
 }
