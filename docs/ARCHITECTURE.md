@@ -37,7 +37,7 @@ flowchart LR
 | Queue           | Decouples ingress from processing              | Redis + BullMQ                        |
 | Workers         | Send messages, run bot flows, call LLM         | Node.js worker processes              |
 | API Server      | Auth, CRUD, agent actions                      | Express + TypeScript + zod validation |
-| DB              | Source of truth                                | PostgreSQL (Prisma or Drizzle)        |
+| DB              | Source of truth                                | PostgreSQL + Prisma (decided Phase 1) |
 | Realtime        | Live inbox updates, agent presence             | Socket.IO or native WS                |
 | Frontend        | Agent inbox, campaign builder                  | React + Vite                          |
 | AI Layer        | Auto-reply, voicebot                           | LLM API + STT/TTS providers           |
