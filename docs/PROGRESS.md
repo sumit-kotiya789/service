@@ -5,7 +5,7 @@ Source of truth for scope: [PHASES.md](PHASES.md). This file tracks status + pha
 | Phase | Name                         | Status      |
 | ----- | ---------------------------- | ----------- |
 | 0     | Foundation                   | complete    |
-| 1     | WhatsApp Core (no real Meta) | in progress |
+| 1     | WhatsApp Core (no real Meta) | complete    |
 | 2     | Real WhatsApp Integration    | not started |
 | 3     | Agent Inbox UI               | not started |
 | 4     | Campaigns & Broadcast        | not started |
@@ -19,6 +19,7 @@ Source of truth for scope: [PHASES.md](PHASES.md). This file tracks status + pha
 
 - 2026-09-25 — Phase 0-2 run as a single app (PROJECT_STANDARDS allows it); `src/` mirrors the future monorepo split so Phase 3 move to pnpm workspaces is mechanical.
 - 2026-09-25 — Package manager: pnpm. Module system: ESM (`"type": "module"`, NodeNext). Tests: vitest. `.env` loaded via Node's built-in `--env-file`, no dotenv.
+- 2026-09-25 — Dev machine: VS Code port-forwarding holds 127.0.0.1:3000/3001, so local `.env` uses PORT=4000, WEBHOOK_PORT=4001.
 - 2026-09-25 — TypeScript pinned to 6.x: typescript-eslint 8.70 refuses TS 7.0. Revisit when typescript-eslint supports TS 7.
 - 2026-09-25 — Compose postgres host port is `POSTGRES_PORT` (default 5432). On the dev machine 5432 = native Postgres, 5433 = VS Code, so local `.env` uses 5434.
 - 2026-09-25 — ORM: Prisma (user choice). Pinned 7.10.0: npm `latest` tag points at 8.0.0-rc.17, not taking an RC.
@@ -53,3 +54,33 @@ Source of truth for scope: [PHASES.md](PHASES.md). This file tracks status + pha
 - ORM choice: Prisma or Drizzle (ARCHITECTURE.md lists both).
 - (Optional) GitHub remote so CI runs + PR-to-self workflow works.
 - No API keys/accounts needed for Phase 1 (fake WhatsApp sender).
+
+### Phase 1 complete — 2026-09-25
+
+**Built**
+
+- Prisma 7.10 schema + migration: users (role admin/agent), refresh_tokens, contacts, conversations (one per contact), messages, templates, audit_logs.
+- API (`src/api`): login, refresh with rotation + reuse detection (replayed token revokes all user sessions), logout, list conversations, list messages, send message (persist `queued` -> enqueue -> 202, never inline). scrypt passwords, HS256 access tokens (15 min), opaque refresh tokens (30 d, sha256 stored).
+- Webhook gateway (`src/webhook-gateway`): Meta verify handshake, HMAC-SHA256 signature check (always on), enqueue, 200. Measured ack p50 11 ms / max 74 ms locally.
+- Workers (`src/worker`): inbound (parse Meta payload, upsert contact/conversation, dedupe by WhatsApp message id), outbound (fake sender logs to console, marks `sent`; retries x5 exponential, `failed` after last attempt).
+- Seed data (2 users, 2 contacts with conversations, 1 template) and `pnpm smoke` end-to-end script.
+- CI runs unit + integration tests against postgres/redis services, and build.
+
+**Verified**: clean install, typecheck, lint, format, 18 unit + 9 integration tests, build, smoke test against the three real processes — all green.
+
+**Security checklist status (Phase 1 scope)**
+
+- Done: webhook signature verified + tested with wrong/missing/tampered signature; rate limits on all endpoints (login/refresh 10 per 15 min per IP); JWT expiry + refresh; ORM-only SQL; strict zod on every API route; secrets from env; HSTS via helmet; audit log (login, failed login, refresh reuse, message send).
+- Deferred with reason: HTTPS enforcement (deploy-time, at the proxy); opt-out (Phase 4 broadcasts).
+- Open decision: contact data (phones, names, message bodies) stored plaintext. Needs a call before any public deploy: disk-level encryption (managed Postgres) vs field-level.
+
+**Stubbed**: WhatsApp sender (console log). Delivery/read receipts ignored (Phase 2). Template submission (Phase 2).
+
+**Known limits (marked `ponytail:` in code)**: in-memory rate-limit store (single instance only); access tokens stay valid up to 15 min after user deactivation; outbound is at-least-once; list endpoints return a fixed 100 with no pagination.
+
+**Needed from you before Phase 2**
+
+- BSP choice (ARCHITECTURE.md open checkbox): direct Meta Cloud API vs Gupshup vs 360dialog vs Twilio. Options + tradeoffs will be presented at Phase 2 start.
+- Meta Business Manager account + WhatsApp Business app, a test phone number, app secret, access token, phone number ID.
+- A public HTTPS URL for the webhook (ngrok/cloudflared for staging).
+- Cost flag: Meta charges per conversation; BSPs add markup/monthly fees; a real number may cost money.
